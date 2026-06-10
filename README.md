@@ -1,89 +1,109 @@
-# Dziennik Progresu Siłowego 1RM (Strength Goal Tracker)
+# Cyber Typing Defender
 
-Dedykowana aplikacja okienkowa WPF napisana w języku C# (WPF, .NET 8.0) i połączona z bazą danych MongoDB. Aplikacja służy do precyzyjnego śledzenia progresu siłowego w jednym, konkretnym boju (np. wyciskaniu leżąc) z celem osiągnięcia założonej wagi maksymalnej (np. 100 kg).
+**Cyber Typing Defender** to zręcznościowa gra okienkowa WPF napisana w języku C# (.NET 8.0) i połączona z bazą danych MongoDB. Zadaniem gracza jest obrona systemu przed spadającymi słowami-zagrożeniami poprzez ich szybkie i bezbłędne wpisywanie na klawiaturze.
 
-Aplikacja opiera się na wyliczaniu szacowanego ciężaru maksymalnego (1RM) na podstawie każdego treningu, co pozwala na bieżąco monitorować realny wzrost siły i postęp w drodze do celu.
-
----
-
-## Główne funkcje
-
-1. **Zapis nowych treningów**: Prosty formularz z polami: data, ciężar (suwak/pole tekstowe) i liczba powtórzeń (suwak/pole tekstowe).
-2. **Podgląd 1RM na żywo (Live Preview)**: Formularz automatycznie wylicza i prezentuje szacowany maks (1RM) w locie, zanim jeszcze zapiszesz trening.
-3. **Pasek postępu 1RM**: Wizualny pasek postępu (od 0% do 100%) pokazujący, jak blisko jesteś swojego celu siłowego (np. 100 kg) w oparciu o Twój najlepszy historyczny wynik 1RM.
-4. **Dashboard statystyk**:
-   - **Rekord 1RM**: Najwyższy wyliczony maks w historii.
-   - **Ostatni trening**: Wynik 1RM z ostatniej sesji.
-   - **Wszystkich serii**: Łączna liczba zarejestrowanych wpisów.
-5. **Historia treningów**: Lista z historią w postaci czytelnych kart zawierających datę, podniesiony ciężar, liczbę powtórzeń, wyliczone 1RM oraz przycisk do bezpiecznego usuwania wpisów.
-6. **Panel ustawień (Drawer)**: Możliwość konfiguracji nazwy ćwiczenia, wagi docelowej oraz parametrów połączenia MongoDB z poziomu interfejsu aplikacji.
+Projekt charakteryzuje się unikalną **stylistyką terminala cyberpunk** (ciemny motyw, monospacowane czcionki, neonowe akcenty kolorystyczne) i oferuje zaawansowany system statystyk, rankingów oraz historii rozgrywek zintegrowany z MongoDB.
 
 ---
 
-## Architektura i technologie
+## Główne Funkcje Aplikacji
 
-Aplikacja została zaprojektowana zgodnie z klasycznym wzorcem MVVM (Model-View-ViewModel):
-* **Język**: C# (.NET 8.0 Windows SDK)
-* **Interfejs**: WPF (XAML) ze spersonalizowanym, ciemnym motywem graficznym (Dark Mode) i efektami cieniowania (glow/drop shadows).
-* **Baza danych**: MongoDB (z użyciem oficjalnego sterownika NuGet `MongoDB.Driver`).
+1. **Dynamiczna Rozgrywka (Arcade Typing):**
+   * Słowa o różnej długości spadają z góry ekranu na planszę (Canvas).
+   * Poprawne wpisanie słowa i naciśnięcie `Enter` lub spacji niszczy zagrożenie i dodaje punkty.
+   * Gracz ma 3 życia – utrata życia następuje, gdy słowo dotrze do dolnej krawędzi ekranu.
+   * Wzrost poziomu (Level) następuje wraz ze zdobywaniem punktów, co zwiększa prędkość spadania słów oraz częstotliwość ich spawnu.
+   * **Wskaźniki na żywo:** Wynik (Score), Poziom (Level), Życia, Celność (%) oraz tempo pisania (KPM – Klawisze na Minutę).
+
+2. **Dedykowane Poziomy Trudności:**
+   * **ŁATWY (Easy):** Słowa 3–5 literowe, wolniejszy start, zielony neon (`#00FF41`).
+   * **ŚREDNI (Medium):** Słowa 6–8 literowe, umiarkowane tempo, pomarańczowy neon (`#FFB000`).
+   * **TRUDNY (Hard):** Słowa 9+ literowe (często specjalistyczne terminy techniczne), bardzo szybkie tempo, czerwony neon (`#FF3333`).
+
+3. **Autoseeding Bazy Słów:**
+   * Przy pierwszym połączeniu z bazą danych program automatycznie wykrywa brak danych i zasila kolekcję MongoDB zestawem startowym słówek z podziałem na trudność (Easy, Medium, Hard).
+
+4. **Tabele Rankingowe (Top 100):**
+   * Oddzielne, przejrzyste tabele rankingowe dla każdego z trzech poziomów trudności.
+   * Prawidłowa numeracja miejsc (od 1, a nie od 0).
+   * Prezentacja nazwy gracza, uzyskanego wyniku punktowego oraz tempa KPM.
+
+5. **Interaktywne Rekordy Gracza (Records Overlay):**
+   * Kliknięcie na login (nazwę) dowolnego gracza w tabeli rankingowej otwiera stylowe okienko nakładkowe prezentujące jego **rekord życiowy na każdym z trzech poziomów**.
+   * Okienko wyświetla najwyższy uzyskany wynik punktowy, KPM, celność oraz dokładną datę i godzinę ustanowienia rekordu (`Ustanowiono: dd.MM.yyyy HH:mm`).
+   * Wyszukiwanie rekordów odbywa się w bazie danych **case-insensitively** (bez względu na wielkość liter). Dzięki temu wyniki gracza, który rejestrował się np. jako `Gabriel` oraz `gabriel`, są poprawnie agregowane i prezentowane razem.
+
+6. **Globalna Historia Gier:**
+   * Dostępny z poziomu paska stanu panel `[HISTORIA]` wyświetlający 20 ostatnich rozegranych gier wszystkich użytkowników (data, gracz, poziom, wynik, KPM, celność).
+
+7. **Zabezpieczenie przed Utratą Danych (Robust Saving):**
+   * Zamknięcie okna podczas rozgrywki (zdarzenie `Closing`) lub powrót do menu głównego za pomocą przycisku pauzy automatycznie kończy grę i zapisuje aktualnie uzyskany wynik w MongoDB.
+   * Zamknięcie aplikacji w trakcie trwania asynchronicznego zapisu blokuje wyłączenie procesu do czasu bezpiecznego zakończenia zapisu danych do bazy.
+
+---
+
+## Architektura i Technologie
+
+Projekt został zbudowany zgodnie ze wzorcem **MVVM (Model-View-ViewModel)**:
+
+* **Platforma**: .NET 8.0-windows (WPF)
+* **Baza danych**: MongoDB (sterownik `MongoDB.Driver` 3.9.0)
+* **Logowanie/Konfiguracja**: Plik `config.json` w katalogu `%localappdata%\TypingDefender\`.
 * **Struktura katalogów**:
-  - `Models/`: Modele danych ([WorkoutSession.cs](file:///d:/projektaplikacjamongo/Models/WorkoutSession.cs), [AppSettings.cs](file:///d:/projektaplikacjamongo/Models/AppSettings.cs)).
-  - `ViewModels/`: Klasy logiki prezentacji ([MainViewModel.cs](file:///d:/projektaplikacjamongo/ViewModels/MainViewModel.cs), pomocnicze [ViewModelBase.cs](file:///d:/projektaplikacjamongo/ViewModels/ViewModelBase.cs) i [RelayCommand.cs](file:///d:/projektaplikacjamongo/ViewModels/RelayCommand.cs)).
-  - `Services/`: Obsługa bazy danych ([MongoService.cs](file:///d:/projektaplikacjamongo/Services/MongoService.cs)).
-  - `Views/`: Warstwa graficzna interfejsu ([MainWindow.xaml](file:///d:/projektaplikacjamongo/MainWindow.xaml)).
+  * [Models/](file:///d:/projektaplikacjamongo/Models/) — Definicje encji MongoDB i struktur pomocniczych (`Word.cs`, `GameSession.cs`, `AppSettings.cs`, `FallingWord.cs`).
+  * [ViewModels/](file:///d:/projektaplikacjamongo/ViewModels/) — Logika gry i bindowanie widoku (`GameViewModel.cs`, `GameState.cs`, `IndexPlusOneConverter.cs`, `ViewModelBase.cs`, `RelayCommand.cs`).
+  * [Services/](file:///d:/projektaplikacjamongo/Services/) — Zarządzanie bazą danych (`MongoService.cs`).
+  * [MainWindow.xaml](file:///d:/projektaplikacjamongo/MainWindow.xaml) / [MainWindow.xaml.cs](file:///d:/projektaplikacjamongo/MainWindow.xaml.cs) — Widok interfejsu w stylu retro-cyberpunk terminala z obsługą animacji renderowania tekstu.
 
 ---
 
-## Metoda wyliczania 1RM
+## Kolekcje w bazie MongoDB (`typing_defender_db`)
 
-Szacowany ciężar maksymalny (1RM - One-Rep Max) jest wyliczany przy użyciu popularnego w sporcie wzoru Epleya:
+1. **`words`**:
+   * `_id` (`ObjectId`)
+   * `word` (`string`) – Tekst słowa do wpisywania.
+   * `difficulty` (`string`) – Poziom trudności (`easy`, `medium`, `hard`).
+   * `category` (`string`) – Kategoria słowa (np. `ogólne`, `techniczne`).
 
-* Dla liczby powtórzeń ($r > 1$):
-  $$1\text{RM} = w \times \left(1 + \frac{r}{30}\right)$$
-  *Gdzie $w$ to podniesiony ciężar (kg), a $r$ to wykonana liczba powtórzeń.*
-* Dla 1 powtórzenia ($r = 1$):
-  $$1\text{RM} = w$$
-
-Aplikacja zaokrągla wyniki do jednego miejsca po przecinku (np. `93.3 kg`).
-
----
-
-## Konfiguracja połączenia z MongoDB
-
-Aplikacja domyślnie próbuje łączyć się z lokalną bazą danych pod adresem:
-`mongodb://127.0.0.1:27017`
-
-### Tolerancja i walidacja wprowadzanych danych:
-* Program automatycznie zabezpiecza użytkownika przed błędami wpisu w panelu konfiguracji. Jeżeli podasz sam adres bez protokołu (np. `127.0.0.1:27017` lub `localhost:27017`), aplikacja samodzielnie dopisze na początku wymagany przedrostek `mongodb://`, zapobiegając awarii sterownika.
-* Limit czasu na połączenie z bazą (timeout) wynosi 3 sekundy. Jeśli baza jest wyłączona, aplikacja nie zawiesi się – wyświetli u góry czytelny, czerwony baner z ostrzeżeniem, zablokuje przyciski zapisu i pozwoli na swobodne wejście do ustawień w celu zmiany konfiguracji.
-
-### Plik konfiguracyjny (AppSettings):
-Wszelkie parametry ustawień aplikacji (waga docelowa, nazwa ćwiczenia, URI połączenia do MongoDB) są trwale zapisywane na komputerze w pliku:
-`%localappdata%\StrengthTracker\config.json`
+2. **`game_sessions`**:
+   * `_id` (`ObjectId`)
+   * `player_name` (`string`) – Login gracza.
+   * `date` (`DateTime`) – Czas ukończenia rozgrywki (zapisywany w UTC, prezentowany w czasie lokalnym).
+   * `difficulty` (`string`) – Poziom trudności sesji.
+   * `score` (`int`) – Uzyskany wynik.
+   * `kpm` (`double`) – Klawisze na minutę.
+   * `words_destroyed` (`int`) – Słowa poprawnie wpisane.
+   * `words_missed` (`int`) – Słowa, które dotarły na dół.
+   * `accuracy_percent` (`double`) – Procentowa celność wpisywania.
+   * `duration_seconds` (`int`) – Czas trwania gry w sekundach.
 
 ---
 
-## Jak uruchomić projekt?
+## Konfiguracja i Uruchomienie
 
-### Wymagania:
-1. .NET 8.0 SDK (zainstalowane na komputerze).
-2. Działająca baza MongoDB (domyślnie na porcie `27017`).
+### Wymagania wstępne:
+1. Pakiet SDK dla .NET 8.0.
+2. Działająca baza MongoDB na porcie `27017` (lokalnie lub w chmurze).
 
-### Uruchomienie lokalnej bazy danych (Windows):
-Jeśli baza MongoDB działa jako usługa systemowa, upewnij się, że jest włączona. Możesz ją uruchomić, otwierając PowerShell jako Administrator i wpisując:
+### Uruchomienie bazy MongoDB:
+Jeśli masz zainstalowaną bazę MongoDB na systemie Windows, upewnij się, że usługa działa:
 ```powershell
 Start-Service MongoDB
 ```
 
-### Kompilacja i uruchomienie programu:
-Otwórz terminal w katalogu głównym projektu (`D:\projektaplikacjamongo`) i wykonaj poniższe polecenia:
-
-1. **Przywrócenie pakietów i budowanie projektu**:
+### Budowanie i uruchomienie gry:
+1. Otwórz konsolę PowerShell w folderze głównym projektu (`D:\projektaplikacjamongo`).
+2. Przywróć pakiety i zbuduj aplikację:
    ```powershell
    dotnet build
    ```
-
-2. **Uruchomienie aplikacji**:
+3. Uruchom grę:
    ```powershell
    dotnet run
    ```
+
+### Konfiguracja Połączenia w Grze:
+Domyślnie gra łączy się z adresem `mongodb://localhost:27017`. Jeżeli Twoja baza działa pod innym adresem lub w chmurze MongoDB Atlas:
+1. Kliknij ikonę ustawień w prawym górnym rogu ekranu powitalnego gry.
+2. Wprowadź poprawny Connection String (program automatycznie doda przedrostek `mongodb://` w przypadku jego braku) oraz nazwę bazy.
+3. Kliknij **ZAPISZ**, aby zapisać konfigurację do pliku `config.json`. Stan połączenia (czerwony/zielony baner) zaktualizuje się automatycznie.
